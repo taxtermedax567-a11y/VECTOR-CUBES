@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vector Line 3D - Arcade Edition</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Pixelify Sans', 'Courier New', monospace, sans-serif !important;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            image-rendering: -moz-crisp-edges;
+            cursor: default;
+        }
+
+        /* Menu Overlay Styling */
+        #menuOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #menuOverlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .menu-title {
+            font-size: 40px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 24px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-align: center;
+            border-bottom: 4px solid #000;
+            padding-bottom: 8px;
+            text-shadow: 2px 2px 0px #fff;
+        }
+
+        .menu-btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 320px;
+        }
+
+        .pixel-btn {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #000;
+            background-color: #fff;
+            border: 3px solid #000;
+            padding: 12px 18px;
+            cursor: pointer;
+            text-transform: uppercase;
+            text-align: center;
+            box-shadow: 4px 4px 0px #000;
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease, color 0.1s ease;
+            outline: none;
+        }
+
+        .pixel-btn:hover {
+            background-color: #000;
+            color: #fff;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #000;
+        }
+
+        .pixel-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        .pixel-setting-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            border: 3px solid #000;
+            padding: 10px 14px;
+            box-shadow: 4px 4px 0px #000;
+            width: 100%;
+        }
+
+        .pixel-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .pixel-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 12px;
+            background: #e0e0e0;
+            border: 2px solid #000;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .pixel-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            background: #000;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        /* Minigames Overlay */
+        #minigamesOverlay, #minigameGameOverOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 12;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #minigamesOverlay.hidden, #minigameGameOverOverlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .minigame-card-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 320px;
+            max-height: 65vh;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .minigame-card {
+            background: #fff;
+            border: 3px solid #000;
+            padding: 12px;
+            box-shadow: 4px 4px 0px #000;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.1s ease, color 0.1s ease;
+            text-align: left;
+        }
+
+        .minigame-card:hover {
+            background: #000;
+            color: #fff;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #000;
+        }
+
+        .minigame-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .minigame-card-desc {
+            font-size: 12px;
+            line-height: 1.3;
+            opacity: 0.85;
+        }
+
+        /* Minigame HUD */
+        #minigameHUD {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            z-index: 6;
+            display: none;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            pointer-events: none;
+        }
+
+        .hud-badge {
+            background: #fff;
+            border: 3px solid #000;
+            padding: 6px 12px;
+            box-shadow: 3px 3px 0px #000;
+            font-size: 15px;
+            font-weight: 700;
+            color: #000;
+            text-transform: uppercase;
+        }
+
+        #menuToggleBtn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 5;
+            font-size: 16px;
+            font-weight: 700;
+            color: #000;
+            background: #fff;
+            border: 3px solid #000;
+            padding: 8px 14px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px #000;
+            display: none;
+        }
+
+        #mobileControls {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            z-index: 5;
+            display: none;
+            gap: 12px;
+            flex-direction: row;
+        }
+
+        .action-btn {
+            width: 58px;
+            height: 58px;
+            font-size: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            box-shadow: 3px 3px 0px #000;
+        }
+
+        .controls-info {
+            font-size: 12px;
+            color: #000;
+            margin-top: 14px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 12px;
+            border: 3px solid #000;
+            box-shadow: 3px 3px 0px #000;
+            max-width: 340px;
+            line-height: 1.35;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <button id="menuToggleBtn">MENÚ [ESC]</button>
+
+    <div id="mobileControls">
+        <button class="pixel-btn action-btn" id="shootTouchBtn" title="Disparar">⚡</button>
+        <button class="pixel-btn action-btn" id="clearTouchBtn" title="Limpiar Línea">🧹</button>
+    </div>
+
+    <div id="menuOverlay">
+        <div class="menu-title">VECTOR LINE 3D</div>
+        <div class="menu-btn-container">
+            <button class="pixel-btn" id="modeToggleBtn" style="font-size: 18px; background: #eef2ff;">🎮 MODO: 1 JUGADOR (1P)</button>
+            <button class="pixel-btn" id="startGameBtn" style="background: #000; color: #fff;">▶️ INICIAR JUEGO</button>
+            <button class="pixel-btn" id="playCoopBtn" style="background: #002211; color: #00ff88; border-color: #00ff88;">🤝 COOPERATIVO (VS OLEADAS)</button>
+            <button class="pixel-btn" id="openMinigamesBtn" style="background: #000; color: #fff;">🕹️ MINIJUEGOS</button>
+            <div class="pixel-setting-container">
+                <label for="pixelSlider" class="pixel-label">CALIDAD / PIXELADO: <span id="pixelValue">4x</span></label>
+                <input type="range" id="pixelSlider" min="1" max="8" value="4" step="1" class="pixel-slider">
+            </div>
+        </div>
+        <div class="controls-info">
+            🎮 <b>Controles:</b><br>
+            <b>P1 (Blanco):</b> [WASD] Mover | [E] Disparar | [Espacio] Trail<br>
+            <b>P2 (Negro):</b> [Flechas] Mover | [L] Disparar | [K / Shift] Trail<br>
+            <b>P3 (Verde):</b> [5, 1, 2, 3] Mover | [0] Pared Protectora (Escudo 5s) | [.] Trail
+        </div>
+    </div>
+
+    <div id="minigamesOverlay" class="hidden">
+        <div class="menu-title">MINIJUEGOS</div>
+        <div class="minigame-card-container">
+            <div class="minigame-card" id="mgPvpInfBtn">
+                <div class="minigame-card-title">⚔️ PVP INFINITO</div>
+                <div class="minigame-card-desc">Duelo sin límite de vidas. ¡Acumula la mayor cantidad de bajas y practica tus lanzamientos!</div>
+            </div>
+            <div class="minigame-card" id="mgPvp3LBtn">
+                <div class="minigame-card-title">⚔️ PVP (3 VIDAS)</div>
+                <div class="minigame-card-desc">Combate directo a 3 vidas por jugador. ¡Sobrevive a tus oponentes!</div>
+            </div>
+            <div class="minigame-card" id="mgTargetBtn">
+                <div class="minigame-card-title">🎯 TIRO AL BLANCO</div>
+                <div class="minigame-card-desc">Destruye tantas dianas flotantes como puedas en 30 segundos. ¡Usa la tecla [E] o ⚡ para disparar!</div>
+            </div>
+            <div class="minigame-card" id="mgDodgeBtn">
+                <div class="minigame-card-title">💣 ESQUIVA VECTORIAL</div>
+                <div class="minigame-card-desc">Peligrosos bloques espinosos cruzan el escenario. ¡Esquívalos y sobrevive todo el tiempo que puedas!</div>
+            </div>
+            <div class="minigame-card" id="mgCollectBtn">
+                <div class="minigame-card-title">⭐ RECOLECTOR</div>
+                <div class="minigame-card-desc">Recoge gemas vectoriales antes de que venza el reloj. Cada gema te otorga +10 Puntos y +1.5 seg.</div>
+            </div>
+        </div>
+        <button class="pixel-btn" id="closeMinigamesBtn" style="margin-top: 16px; width: 320px;">⬅️ VOLVER AL MENÚ</button>
+    </div>
+
+    <div id="minigameHUD">
+        <div class="hud-badge" id="hudMinigameTitle">MINIJUEGO</div>
+        <div class="hud-badge" id="hudScore">PUNTOS: 0</div>
+        <div class="hud-badge" id="hudTimer">TIEMPO: 30s</div>
+    </div>
+
+    <div id="minigameGameOverOverlay" class="hidden">
+        <div class="menu-title" id="goTitle">FIN DEL JUEGO</div>
+        <div class="hud-badge" id="goScoreText" style="font-size: 18px; margin-bottom: 20px; white-space: pre-line; text-align: center;">PUNTAJE FINAL: 0</div>
+        <div class="menu-btn-container">
+            <button class="pixel-btn" id="retryMinigameBtn">🔄 REINTENTAR</button>
+            <button class="pixel-btn" id="backToMgMenuBtn">🕹️ OTROS MINIJUEGOS</button>
+        </div>
+    </div>
+
+    <script>
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let pixelScale = 4;
+        const MAP_BOUNDARY = 35.0;
+        let lastTime = 0;
+
+        let selectedPlayerMode = '1P';
+
+        let p1Score = 0;
+        let p2Score = 0;
+        let p3Score = 0;
+        let p1Lives = 3;
+        let p2Lives = 3;
+        let p3Lives = 3;
+
+        let coopWave = 1;
+        let coopScore = 0;
+        let p1CoopHp = 3;
+        let p2CoopHp = 3;
+        let p3CoopHp = 3;
+        let coopEnemies = [];
+        let coopEnemyProjectiles = [];
+        let waveTransitionTimer = 0;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'shoot') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.12);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } else if (type === 'clear') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                }
+            } catch (e) {}
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        let gameState = 'MENU';
+        let gameMode = '1P';
+
+        const CUBE_SIZE = 0.8;
+        const BASE_SPEED = 6.0;
+        const MAX_SPEED = 16.8; 
+        const ACCELERATION_RATE = 14.0;
+        const SLIDE_DECELERATION = 4.5;
+
+        let p1 = {
+            id: 1,
+            baseColor: 0xffffff,
+            hitFlash: 0.0,
+            posX: -3.5,
+            posZ: 0,
+            currentSpeed: BASE_SPEED,
+            slideVelX: 0,
+            slideVelZ: 0,
+            activeDirX: 0,
+            activeDirZ: 0,
+            lastFacingX: 0,
+            lastFacingZ: -1,
+            mesh: null,
+            wireframe: null,
+            lineGeometry: null,
+            lineMesh: null,
+            trailPoints: []
+        };
+
+        let p2 = {
+            id: 2,
+            baseColor: 0x000000,
+            hitFlash: 0.0,
+            posX: 0,
+            posZ: 0,
+            currentSpeed: BASE_SPEED,
+            slideVelX: 0,
+            slideVelZ: 0,
+            activeDirX: 0,
+            activeDirZ: 0,
+            lastFacingX: 0,
+            lastFacingZ: -1,
+            mesh: null,
+            wireframe: null,
+            lineGeometry: null,
+            lineMesh: null,
+            trailPoints: []
+        };
+
+        let p3 = {
+            id: 3,
+            baseColor: 0x00ff88,
+            hitFlash: 0.0,
+            posX: 3.5,
+            posZ: 0,
+            currentSpeed: BASE_SPEED,
+            slideVelX: 0,
+            slideVelZ: 0,
+            activeDirX: 0,
+            activeDirZ: 0,
+            lastFacingX: 0,
+            lastFacingZ: -1,
+            mesh: null,
+            wireframe: null,
+            lineGeometry: null,
+            lineMesh: null,
+            trailPoints: [],
+            wallCooldownTimer: 0.0
+        };
+
+        const P3_WALL_COOLDOWN = 0.0;
+        let activeWalls = [];
+
+        let scene, camera, renderer, gridHelper;
+        let ambientAngle = 0;
+        let projectiles = [];
+        let cameraZoomFactor = 1.0;
+
+        let currentMinigame = null;
+        let minigameScore = 0;
+        let minigameTimer = 0;
+        let minigameEntities = [];
+        let minigameSpawnTimer = 0;
+
+        const keysPressed = {};
+
+        const menuOverlay = document.getElementById('menuOverlay');
+        const modeToggleBtn = document.getElementById('modeToggleBtn');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const playCoopBtn = document.getElementById('playCoopBtn');
+        const pixelSlider = document.getElementById('pixelSlider');
+        const pixelValue = document.getElementById('pixelValue');
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const mobileControls = document.getElementById('mobileControls');
+        const shootTouchBtn = document.getElementById('shootTouchBtn');
+
+        const openMinigamesBtn = document.getElementById('openMinigamesBtn');
+        const closeMinigamesBtn = document.getElementById('closeMinigamesBtn');
+        const minigamesOverlay = document.getElementById('minigamesOverlay');
+        const mgPvpInfBtn = document.getElementById('mgPvpInfBtn');
+        const mgPvp3LBtn = document.getElementById('mgPvp3LBtn');
+        const mgTargetBtn = document.getElementById('mgTargetBtn');
+        const mgDodgeBtn = document.getElementById('mgDodgeBtn');
+        const mgCollectBtn = document.getElementById('mgCollectBtn');
+        const minigameHUD = document.getElementById('minigameHUD');
+        const hudMinigameTitle = document.getElementById('hudMinigameTitle');
+        const hudScore = document.getElementById('hudScore');
+        const hudTimer = document.getElementById('hudTimer');
+        const minigameGameOverOverlay = document.getElementById('minigameGameOverOverlay');
+        const goTitle = document.getElementById('goTitle');
+        const goScoreText = document.getElementById('goScoreText');
+        const retryMinigameBtn = document.getElementById('retryMinigameBtn');
+        const backToMgMenuBtn = document.getElementById('backToMgMenuBtn');
+
+        function createFaceTexture(faceStr, textColorHex, bgHex) {
+            const canvas2d = document.createElement('canvas');
+            canvas2d.width = 128;
+            canvas2d.height = 128;
+            const ctx = canvas2d.getContext('2d');
+
+            ctx.fillStyle = bgHex;
+            ctx.fillRect(0, 0, 128, 128);
+
+            ctx.fillStyle = textColorHex;
+            ctx.font = 'bold 52px "Pixelify Sans", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(faceStr, 64, 64);
+
+            const texture = new THREE.CanvasTexture(canvas2d);
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+            return texture;
+        }
+
+        modeToggleBtn.addEventListener('click', () => {
+            if (selectedPlayerMode === '1P') {
+                selectedPlayerMode = '2P';
+                modeToggleBtn.innerText = '🎮 MODO: 2 JUGADORES (2P)';
+            } else if (selectedPlayerMode === '2P') {
+                selectedPlayerMode = '3P';
+                modeToggleBtn.innerText = '🎮 MODO: 3 JUGADORES (3P)';
+            } else {
+                selectedPlayerMode = '1P';
+                modeToggleBtn.innerText = '🎮 MODO: 1 JUGADOR (1P)';
+            }
+        });
+
+        startGameBtn.addEventListener('click', () => {
+            startPlaying(selectedPlayerMode);
+        });
+
+        pixelSlider.addEventListener('input', (e) => {
+            pixelScale = parseInt(e.target.value, 10);
+            pixelValue.innerText = pixelScale === 1 ? '1x (HD)' : `${pixelScale}x`;
+            resizeRenderer();
+        });
+
+        openMinigamesBtn.addEventListener('click', () => {
+            menuOverlay.classList.add('hidden');
+            minigamesOverlay.classList.remove('hidden');
+        });
+
+        closeMinigamesBtn.addEventListener('click', () => {
+            minigamesOverlay.classList.add('hidden');
+            menuOverlay.classList.remove('hidden');
+        });
+
+        mgPvpInfBtn.addEventListener('click', () => startMinigame('PVP_INFINITE'));
+        mgPvp3LBtn.addEventListener('click', () => startMinigame('PVP_3LIVES'));
+        mgTargetBtn.addEventListener('click', () => startMinigame('TARGET'));
+        mgDodgeBtn.addEventListener('click', () => startMinigame('DODGE'));
+        mgCollectBtn.addEventListener('click', () => startMinigame('COLLECT'));
+
+        retryMinigameBtn.addEventListener('click', () => {
+            minigameGameOverOverlay.classList.add('hidden');
+            if (currentMinigame) startMinigame(currentMinigame);
+        });
+
+        backToMgMenuBtn.addEventListener('click', () => {
+            minigameGameOverOverlay.classList.add('hidden');
+            minigamesOverlay.classList.remove('hidden');
+        });
+
+        function createPlayerObject(player, baseColor, wireColor, lineColor) {
+            player.baseColor = baseColor;
+
+            const geo = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE);
+            const mat = new THREE.MeshBasicMaterial({ color: baseColor });
+            player.mesh = new THREE.Mesh(geo, mat);
+            player.mesh.position.set(player.posX, CUBE_SIZE / 2, player.posZ);
+
+            const edges = new THREE.EdgesGeometry(geo);
+            const wireMat = new THREE.LineBasicMaterial({ color: wireColor, linewidth: 2 });
+            player.wireframe = new THREE.LineSegments(edges, wireMat);
+            player.mesh.add(player.wireframe);
+
+            scene.add(player.mesh);
+
+            player.lineGeometry = new THREE.BufferGeometry();
+            const lineMat = new THREE.LineBasicMaterial({ color: lineColor, linewidth: 2 });
+            player.lineMesh = new THREE.Line(player.lineGeometry, lineMat);
+            player.lineMesh.frustumCulled = false;
+            scene.add(player.lineMesh);
+        }
+
+        function addTrailPoint(player, x, z) {
+            if (!player || !player.mesh) return;
+            player.trailPoints.push(new THREE.Vector3(x, CUBE_SIZE / 2, z));
+            if (player.trailPoints.length > 100) {
+                player.trailPoints.shift();
+            }
+            if (player.lineGeometry) {
+                player.lineGeometry.setFromPoints(player.trailPoints);
+            }
+        }
+
+        function clearTrail(player) {
+            if (!player) return;
+            player.trailPoints = [];
+            if (player.lineGeometry) {
+                player.lineGeometry.setFromPoints([]);
+            }
+            playSound('clear');
+        }
+
+        function shootProjectile(player, baseColor, wireColor) {
+            if (!player || !player.mesh || !player.mesh.visible) return;
+            let dirX = player.activeDirX;
+            let dirZ = player.activeDirZ;
+            if (dirX === 0 && dirZ === 0) {
+                dirX = player.lastFacingX;
+                dirZ = player.lastFacingZ;
+            }
+            const len = Math.hypot(dirX, dirZ);
+            if (len > 0) {
+                dirX /= len;
+                dirZ /= len;
+            } else {
+                dirZ = -1;
+            }
+
+            const geo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+            const mat = new THREE.MeshBasicMaterial({ color: baseColor });
+            const mesh = new THREE.Mesh(geo, mat);
+
+            const edges = new THREE.EdgesGeometry(geo);
+            const wireMat = new THREE.LineBasicMaterial({ color: wireColor, linewidth: 2 });
+            mesh.add(new THREE.LineSegments(edges, wireMat));
+
+            mesh.position.set(player.posX + dirX * 0.8, CUBE_SIZE / 2, player.posZ + dirZ * 0.8);
+            scene.add(mesh);
+
+            projectiles.push({
+                ownerId: player.id,
+                mesh: mesh,
+                dirX: dirX,
+                dirZ: dirZ,
+                speed: 28.0,
+                life: 2.5
+            });
+
+            playSound('shoot');
+        }
+
+        function clearMinigameEntities() {
+            for (let ent of minigameEntities) {
+                if (ent.mesh) {
+                    scene.remove(ent.mesh);
+                    if (ent.mesh.geometry) ent.mesh.geometry.dispose();
+                }
+            }
+            minigameEntities = [];
+
+            for (let wall of activeWalls) {
+                if (wall.mesh) {
+                    scene.remove(wall.mesh);
+                    if (wall.mesh.geometry) wall.mesh.geometry.dispose();
+                }
+            }
+            activeWalls = [];
+            p3.wallCooldownTimer = 0.0;
+
+            for (let enemy of coopEnemies) {
+                if (enemy.mesh) {
+                    scene.remove(enemy.mesh);
+                    if (enemy.mesh.geometry) enemy.mesh.geometry.dispose();
+                }
+            }
+            coopEnemies = [];
+
+            for (let ep of coopEnemyProjectiles) {
+                if (ep.mesh) {
+                    scene.remove(ep.mesh);
+                    if (ep.mesh.geometry) ep.mesh.geometry.dispose();
+                }
+            }
+            coopEnemyProjectiles = [];
+        }
+
+        function startMinigame(type) {
+            currentMinigame = type;
+            minigameScore = 0;
+            minigameSpawnTimer = 0;
+            clearMinigameEntities();
+
+            minigamesOverlay.classList.add('hidden');
+            minigameGameOverOverlay.classList.add('hidden');
+            minigameHUD.style.display = 'flex';
+
+            if (type === 'PVP_INFINITE') {
+                hudMinigameTitle.innerText = '⚔️ PVP INFINITO';
+                p1Score = 0;
+                p2Score = 0;
+                p3Score = 0;
+            } else if (type === 'PVP_3LIVES') {
+                hudMinigameTitle.innerText = '⚔️ PVP (3 VIDAS)';
+                p1Lives = 3;
+                p2Lives = 3;
+                p3Lives = 3;
+            } else if (type === 'TARGET') {
+                hudMinigameTitle.innerText = '🎯 TIRO AL BLANCO';
+                minigameTimer = 30.0;
+                for (let i = 0; i < 5; i++) spawnMinigameTarget();
+            } else if (type === 'DODGE') {
+                hudMinigameTitle.innerText = '💣 ESQUIVA VECTORIAL';
+                minigameTimer = 0.0;
+            } else if (type === 'COLLECT') {
+                hudMinigameTitle.innerText = '⭐ RECOLECTOR';
+                minigameTimer = 20.0;
+                for (let i = 0; i < 3; i++) spawnMinigameGem();
+            }
+
+            updateMinigameHUD();
+            startPlaying((type === 'PVP_INFINITE' || type === 'PVP_3LIVES') ? selectedPlayerMode : '1P');
+            gameState = 'MINIGAME';
+        }
+
+        function updateMinigameHUD() {
+            if (currentMinigame === 'COOP') {
+                hudMinigameTitle.innerText = `🤝 CO-OP: OLEADA ${coopWave}`;
+                const p1Text = p1CoopHp > 0 ? `P1: ${'❤️'.repeat(p1CoopHp)}` : 'P1: 💀';
+                const p2Text = p2CoopHp > 0 ? `P2: ${'❤️'.repeat(p2CoopHp)}` : 'P2: 💀';
+                const p3Text = gameMode === '3P' ? (p3CoopHp > 0 ? `P3: ${'❤️'.repeat(p3CoopHp)}` : 'P3: 💀') : '';
+                hudScore.innerText = `${p1Text} | ${p2Text} ${p3Text}`;
+                hudTimer.innerText = `PTS: ${coopScore} | ENM: ${coopEnemies.length}`;
+            } else if (currentMinigame === 'PVP_INFINITE') {
+                if (gameMode === '3P') {
+                    hudScore.innerText = `P1: ${p1Score} | P2: ${p2Score} | P3: ${p3Score}`;
+                    hudTimer.innerText = `MODO 3P`;
+                } else {
+                    hudScore.innerText = `P1: ${p1Score} PTS`;
+                    hudTimer.innerText = `P2: ${p2Score} PTS`;
+                }
+            } else if (currentMinigame === 'PVP_3LIVES') {
+                if (gameMode === '3P') {
+                    hudScore.innerText = `P1:${'❤️'.repeat(Math.max(0, p1Lives))} | P2:${'❤️'.repeat(Math.max(0, p2Lives))}`;
+                    hudTimer.innerText = `P3:${'❤️'.repeat(Math.max(0, p3Lives))}`;
+                } else {
+                    hudScore.innerText = `P1: ${'❤️'.repeat(Math.max(0, p1Lives))}`;
+                    hudTimer.innerText = `P2: ${'❤️'.repeat(Math.max(0, p2Lives))}`;
+                }
+            } else {
+                hudScore.innerText = `PUNTOS: ${Math.floor(minigameScore)}`;
+                if (currentMinigame === 'DODGE') {
+                    hudTimer.innerText = `TIEMPO: ${minigameTimer.toFixed(1)}s`;
+                } else {
+                    hudTimer.innerText = `TIEMPO: ${Math.max(0, minigameTimer).toFixed(1)}s`;
+                }
+            }
+        }
+
+        function endMinigame(titleText) {
+            gameState = 'MENU';
+            minigameHUD.style.display = 'none';
+            mobileControls.style.display = 'none';
+            canvas.style.cursor = 'default';
+
+            goTitle.innerText = titleText || 'FIN DEL JUEGO';
+            if (currentMinigame === 'COOP') {
+                goScoreText.innerText = `LLEGARON A LA OLEADA: ${coopWave}\nPUNTAJE COOPERATIVO: ${coopScore} PTS`;
+            } else if (currentMinigame === 'PVP_INFINITE') {
+                if (gameMode === '3P') {
+                    goScoreText.innerText = `RESULTADO FINAL:\nP1: ${p1Score} PTS | P2: ${p2Score} PTS | P3: ${p3Score} PTS`;
+                } else {
+                    goScoreText.innerText = `RESULTADO FINAL:\nP1: ${p1Score} PTS | P2: ${p2Score} PTS`;
+                }
+            } else if (currentMinigame === 'PVP_3LIVES') {
+                let winner = '¡EMPATE!';
+                if (p1Lives > 0) winner = '¡P1 (BLANCO) GANA!';
+                else if (p2Lives > 0) winner = '¡P2 (NEGRO) GANA!';
+                else if (p3Lives > 0) winner = '¡P3 (VERDE) GANA!';
+                
+                goScoreText.innerText = `${winner}\nVIDAS: P1: ${Math.max(0, p1Lives)} | P2: ${Math.max(0, p2Lives)} ${gameMode === '3P' ? '| P3: ' + Math.max(0, p3Lives) : ''}`;
+            } else if (currentMinigame === 'DODGE') {
+                goScoreText.innerText = `TIEMPO SOBREVIVIDO: ${minigameTimer.toFixed(1)} seg`;
+            } else {
+                goScoreText.innerText = `PUNTAJE FINAL: ${minigameScore} PTS`;
+            }
+
+            clearMinigameEntities();
+            minigameGameOverOverlay.classList.remove('hidden');
+        }
+
+        function spawnMinigameTarget() {
+            const geo = new THREE.OctahedronGeometry(0.8, 0);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xff0044, wireframe: true });
+            const mesh = new THREE.Mesh(geo, mat);
+
+            const rx = (Math.random() - 0.5) * (MAP_BOUNDARY * 1.4);
+            const rz = (Math.random() - 0.5) * (MAP_BOUNDARY * 1.4);
+            mesh.position.set(rx, 1.2, rz);
+            scene.add(mesh);
+
+            minigameEntities.push({
+                type: 'TARGET',
+                mesh: mesh,
+                rotSpeed: Math.random() * 2 + 1,
+                floatOffset: Math.random() * Math.PI * 2
+            });
+        }
+
+        function spawnMinigameHazard() {
+            const size = Math.random() * 0.8 + 0.8;
+            const geo = new THREE.BoxGeometry(size, size, size);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xff1111 });
+            const mesh = new THREE.Mesh(geo, mat);
+
+            const edges = new THREE.EdgesGeometry(geo);
+            const lineMat = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+            mesh.add(new THREE.LineSegments(edges, lineMat));
+
+            const side = Math.floor(Math.random() * 4);
+            let x = 0, z = 0, vx = 0, vz = 0;
+            const speed = Math.random() * 12 + 10;
+
+            if (side === 0) { x = -MAP_BOUNDARY; z = (Math.random() - 0.5) * MAP_BOUNDARY * 2; vx = speed; }
+            else if (side === 1) { x = MAP_BOUNDARY; z = (Math.random() - 0.5) * MAP_BOUNDARY * 2; vx = -speed; }
+            else if (side === 2) { x = (Math.random() - 0.5) * MAP_BOUNDARY * 2; z = -MAP_BOUNDARY; vz = speed; }
+            else { x = (Math.random() - 0.5) * MAP_BOUNDARY * 2; z = MAP_BOUNDARY; vz = -speed; }
+
+            mesh.position.set(x, size / 2, z);
+            scene.add(mesh);
+
+            minigameEntities.push({
+                type: 'HAZARD',
+                mesh: mesh,
+                vx: vx,
+                vz: vz,
+                size: size
+            });
+        }
+
+        function spawnMinigameGem() {
+            const geo = new THREE.OctahedronGeometry(0.6, 0);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+            const mesh = new THREE.Mesh(geo, mat);
+
+            const rx = (Math.random() - 0.5) * (MAP_BOUNDARY * 1.5);
+            const rz = (Math.random() - 0.5) * (MAP_BOUNDARY * 1.5);
+            mesh.position.set(rx, 0.6, rz);
+            scene.add(mesh);
+
+            minigameEntities.push({
+                type: 'GEM',
+                mesh: mesh
+            });
+        }
+
+        function startPlaying(mode) {
+            initAudio();
+            gameMode = mode;
+            if (gameState !== 'MINIGAME') gameState = 'PLAYING';
+
+            p1.posX = mode === '1P' ? 0 : (mode === '2P' ? -3.0 : -5.0);
+            p1.posZ = 0;
+            p1.hitFlash = 0.0;
+            if (p1.mesh) {
+                p1.mesh.visible = true;
+                p1.mesh.material.color.setHex(p1.baseColor);
+            }
+            p1.trailPoints = [];
+            addTrailPoint(p1, p1.posX, p1.posZ);
+
+            if (p2.mesh) {
+                p2.mesh.visible = (mode === '2P' || mode === '3P');
+                p2.mesh.material.color.setHex(p2.baseColor);
+            }
+            if (p2.lineMesh) p2.lineMesh.visible = (mode === '2P' || mode === '3P');
+
+            if (mode === '2P' || mode === '3P') {
+                p2.posX = mode === '2P' ? 3.0 : 0.0;
+                p2.posZ = 0;
+                p2.hitFlash = 0.0;
+                p2.trailPoints = [];
+                addTrailPoint(p2, p2.posX, p2.posZ);
+            }
+
+            if (p3.mesh) {
+                p3.mesh.visible = (mode === '3P');
+                p3.mesh.material.color.setHex(p3.baseColor);
+            }
+            if (p3.lineMesh) p3.lineMesh.visible = (mode === '3P');
+
+            if (mode === '3P') {
+                p3.posX = 5.0;
+                p3.posZ = 0;
+                p3.hitFlash = 0.0;
+                p3.trailPoints = [];
+                addTrailPoint(p3, p3.posX, p3.posZ);
+            }
+
+            for (let p of projectiles) {
+                scene.remove(p.mesh);
+                p.mesh.geometry.dispose();
+            }
+            projectiles = [];
+
+            menuOverlay.classList.add('hidden');
+            minigamesOverlay.classList.add('hidden');
+            menuToggleBtn.style.display = 'block';
+            if (window.innerWidth <= 768) mobileControls.style.display = 'flex';
+            canvas.style.cursor = 'none';
+        }
+
+        function openMenu() {
+            if (gameState === 'MINIGAME') {
+                minigameHUD.style.display = 'none';
+                clearMinigameEntities();
+            }
+            gameState = 'MENU';
+            menuOverlay.classList.remove('hidden');
+            minigamesOverlay.classList.add('hidden');
+            minigameGameOverOverlay.classList.add('hidden');
+            menuToggleBtn.style.display = 'none';
+            mobileControls.style.display = 'none';
+            canvas.style.cursor = 'default';
+            for (let k in keysPressed) keysPressed[k] = false;
+        }
+
+        playCoopBtn.addEventListener('click', () => startCoopMode());
+        menuToggleBtn.addEventListener('click', openMenu);
+        shootTouchBtn.addEventListener('click', () => shootProjectile(p1, 0xffffff, 0x000000));
+
+        function startCoopMode() {
+            initAudio();
+            gameState = 'MINIGAME';
+            currentMinigame = 'COOP';
+            gameMode = selectedPlayerMode;
+
+            coopWave = 1;
+            coopScore = 0;
+            p1CoopHp = 3;
+            p2CoopHp = 3;
+            p3CoopHp = 3;
+            waveTransitionTimer = 0;
+
+            hudMinigameTitle.innerText = `🤝 CO-OP (${gameMode}): OLEADA 1`;
+            minigameHUD.style.display = 'flex';
+
+            p1.posX = gameMode === '1P' ? 0 : -5.0;
+            p1.posZ = 0;
+            p1.hitFlash = 0.0;
+            p1.mesh.visible = true;
+            p1.mesh.material.color.setHex(p1.baseColor);
+            p1.trailPoints = [];
+            addTrailPoint(p1, p1.posX, p1.posZ);
+
+            if (gameMode === '2P' || gameMode === '3P') {
+                p2.posX = gameMode === '2P' ? 5.0 : 0.0;
+                p2.posZ = 0;
+                p2.hitFlash = 0.0;
+                p2.mesh.visible = true;
+                p2.mesh.material.color.setHex(p2.baseColor);
+                p2.lineMesh.visible = true;
+                p2.trailPoints = [];
+                addTrailPoint(p2, p2.posX, p2.posZ);
+            } else {
+                p2.mesh.visible = false;
+                if (p2.lineMesh) p2.lineMesh.visible = false;
+            }
+
+            if (gameMode === '3P') {
+                p3.posX = 5.0;
+                p3.posZ = 0;
+                p3.hitFlash = 0.0;
+                p3.mesh.visible = true;
+                p3.mesh.material.color.setHex(p3.baseColor);
+                p3.lineMesh.visible = true;
+                p3.trailPoints = [];
+                addTrailPoint(p3, p3.posX, p3.posZ);
+            } else {
+                p3.mesh.visible = false;
+                if (p3.lineMesh) p3.lineMesh.visible = false;
+            }
+
+            clearMinigameEntities();
+            spawnCoopWave(coopWave);
+
+            menuOverlay.classList.add('hidden');
+            minigamesOverlay.classList.add('hidden');
+            minigameGameOverOverlay.classList.add('hidden');
+            menuToggleBtn.style.display = 'block';
+            if (window.innerWidth <= 768) mobileControls.style.display = 'flex';
+            canvas.style.cursor = 'none';
+
+            updateMinigameHUD();
+        }
+
+        function spawnCoopWave(wave) {
+            const playerMultiplier = gameMode === '3P' ? 1.5 : (gameMode === '2P' ? 1.2 : 1.0);
+            const count = Math.floor((4 + wave * 2) * playerMultiplier);
+
+            for (let i = 0; i < count; i++) {
+                const side = Math.floor(Math.random() * 4);
+                let x = 0, z = 0;
+                const offset = (Math.random() - 0.5) * MAP_BOUNDARY * 1.8;
+
+                if (side === 0) { x = -MAP_BOUNDARY + 2; z = offset; }
+                else if (side === 1) { x = MAP_BOUNDARY - 2; z = offset; }
+                else if (side === 2) { x = offset; z = -MAP_BOUNDARY + 2; }
+                else { x = offset; z = MAP_BOUNDARY - 2; }
+
+                const randType = Math.random();
+                let type = 'CHASER';
+                let color = 0xff0055;
+                let scale = 0.8;
+                let hp = 1;
+                let speed = 5.0 + Math.min(6.0, wave * 0.4);
+
+                if (randType > 0.65) {
+                    type = 'SHOOTER';
+                    color = 0xffd700;
+                    scale = 0.7;
+                    speed = 3.5;
+                } else if (randType > 0.4 && wave >= 2) {
+                    type = 'CHARGER';
+                    color = 0xff5500;
+                    scale = 1.1;
+                    hp = 2 + Math.floor(wave / 3);
+                    speed = 3.0;
+                }
+
+                let geo;
+                if (type === 'CHASER') geo = new THREE.OctahedronGeometry(scale, 0);
+                else if (type === 'SHOOTER') geo = new THREE.ConeGeometry(scale, scale * 1.5, 4);
+                else geo = new THREE.BoxGeometry(scale, scale, scale);
+
+                const mat = new THREE.MeshBasicMaterial({ color: color });
+                const mesh = new THREE.Mesh(geo, mat);
+
+                const edges = new THREE.EdgesGeometry(geo);
+                const lineMat = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+                mesh.add(new THREE.LineSegments(edges, lineMat));
+
+                mesh.position.set(x, scale / 2, z);
+                scene.add(mesh);
+
+                coopEnemies.push({
+                    type: type,
+                    mesh: mesh,
+                    hp: hp,
+                    maxHp: hp,
+                    speed: speed,
+                    vx: 0,
+                    vz: 0,
+                    shootTimer: Math.random() * 2.0,
+                    chargeState: 'IDLE',
+                    scale: scale
+                });
+            }
+        }
+
+        function spawnEnemyProjectile(x, z, dirX, dirZ) {
+            const geo = new THREE.SphereGeometry(0.25, 6, 6);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xff0033 });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, 0.5, z);
+            scene.add(mesh);
+
+            coopEnemyProjectiles.push({
+                mesh: mesh,
+                dirX: dirX,
+                dirZ: dirZ,
+                speed: 18.0,
+                life: 3.0
+            });
+        }
+
+        function updateCameraPosition(deltaTime) {
+            if (!camera) return;
+
+            if (gameState === 'MENU') {
+                ambientAngle += (deltaTime || 0.016) * 0.3;
+                const radius = 25;
+                camera.position.x = Math.sin(ambientAngle) * radius;
+                camera.position.z = Math.cos(ambientAngle) * radius;
+                camera.position.y = 15;
+                camera.lookAt(0, 0, 0);
+            } else {
+                const activePositions = [];
+                if ((gameMode === '1P' || gameMode === '2P' || gameMode === '3P') && (currentMinigame !== 'COOP' || p1CoopHp > 0)) {
+                    activePositions.push({ x: p1.posX, z: p1.posZ });
+                }
+                if ((gameMode === '2P' || gameMode === '3P') && (currentMinigame !== 'COOP' || p2CoopHp > 0)) {
+                    activePositions.push({ x: p2.posX, z: p2.posZ });
+                }
+                if ((gameMode === '3P') && (currentMinigame !== 'COOP' || p3CoopHp > 0)) {
+                    activePositions.push({ x: p3.posX, z: p3.posZ });
+                }
+
+                if (activePositions.length === 0) return;
+
+                let avgX = 0, avgZ = 0;
+                for (let pos of activePositions) {
+                    avgX += pos.x;
+                    avgZ += pos.z;
+                }
+                avgX /= activePositions.length;
+                avgZ /= activePositions.length;
+
+                let maxDist = 0;
+                for (let i = 0; i < activePositions.length; i++) {
+                    for (let j = i + 1; j < activePositions.length; j++) {
+                        const dx = activePositions[i].x - activePositions[j].x;
+                        const dz = activePositions[i].z - activePositions[j].z;
+                        const d = Math.hypot(dx, dz);
+                        if (d > maxDist) maxDist = d;
+                    }
+                }
+
+                const zoom = Math.max(1.0, maxDist / 14) * cameraZoomFactor;
+                const camDistance = 15 * zoom;
+                const camHeight = 16 * zoom;
+
+                camera.position.x = THREE.MathUtils.lerp(camera.position.x, avgX + camDistance * 0.707, 0.12);
+                camera.position.z = THREE.MathUtils.lerp(camera.position.z, avgZ + camDistance * 0.707, 0.12);
+                camera.position.y = THREE.MathUtils.lerp(camera.position.y, camHeight, 0.12);
+                camera.lookAt(avgX, 0.5, avgZ);
+            }
+        }
+
+        function updatePlayerMovement(player, inputX, inputZ, deltaTime) {
+            if (!player || !player.mesh) return;
+
+            if (inputX !== 0 || inputZ !== 0) {
+                let dirX = inputX;
+                let dirZ = inputZ;
+                if (dirX !== 0 && dirZ !== 0) {
+                    const invLen = 0.70710678;
+                    dirX *= invLen;
+                    dirZ *= invLen;
+                }
+
+                player.activeDirX = dirX;
+                player.activeDirZ = dirZ;
+                player.lastFacingX = dirX;
+                player.lastFacingZ = dirZ;
+
+                player.currentSpeed = Math.min(MAX_SPEED, player.currentSpeed + ACCELERATION_RATE * deltaTime);
+
+                player.slideVelX = dirX * player.currentSpeed;
+                player.slideVelZ = dirZ * player.currentSpeed;
+
+                const targetAngle = Math.atan2(dirX, dirZ);
+                player.mesh.rotation.y = THREE.MathUtils.lerp(player.mesh.rotation.y, targetAngle, deltaTime * 12.0);
+            } else {
+                player.activeDirX = 0;
+                player.activeDirZ = 0;
+                player.currentSpeed = BASE_SPEED;
+
+                player.slideVelX = THREE.MathUtils.lerp(player.slideVelX, 0, SLIDE_DECELERATION * deltaTime);
+                player.slideVelZ = THREE.MathUtils.lerp(player.slideVelZ, 0, SLIDE_DECELERATION * deltaTime);
+            }
+
+            let nextX = player.posX + player.slideVelX * deltaTime;
+            let nextZ = player.posZ + player.slideVelZ * deltaTime;
+
+            nextX = Math.max(-MAP_BOUNDARY, Math.min(MAP_BOUNDARY, nextX));
+            nextZ = Math.max(-MAP_BOUNDARY, Math.min(MAP_BOUNDARY, nextZ));
+
+            const moved = (Math.abs(nextX - player.posX) > 0.001 || Math.abs(nextZ - player.posZ) > 0.001);
+
+            player.posX = nextX;
+            player.posZ = nextZ;
+
+            player.mesh.position.x = player.posX;
+            player.mesh.position.z = player.posZ;
+
+            if (player.hitFlash > 0) {
+                player.hitFlash = Math.max(0, player.hitFlash - deltaTime * 2.5);
+                const redColor = new THREE.Color(0xff0000);
+                const baseColor = new THREE.Color(player.baseColor);
+                player.mesh.material.color.copy(redColor).lerp(baseColor, 1.0 - player.hitFlash);
+            } else {
+                player.mesh.material.color.setHex(player.baseColor);
+            }
+
+            if (player.slideVelX !== 0 || player.slideVelZ !== 0) {
+                player.mesh.rotation.z -= player.slideVelX * deltaTime * 0.9;
+                player.mesh.rotation.x += player.slideVelZ * deltaTime * 0.9;
+            } else {
+                player.mesh.rotation.x = THREE.MathUtils.lerp(player.mesh.rotation.x, 0, deltaTime * 5.0);
+                player.mesh.rotation.z = THREE.MathUtils.lerp(player.mesh.rotation.z, 0, deltaTime * 5.0);
+            }
+
+            if (moved) {
+                addTrailPoint(player, player.posX, player.posZ);
+            }
+        }
+
+        function initScene() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+
+            const aspect = window.innerWidth / window.innerHeight;
+            camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false });
+            resizeRenderer();
+            updateCameraPosition(0);
+
+            gridHelper = new THREE.GridHelper(1000, 500, 0x000000, 0xd0d0d0);
+            gridHelper.position.y = -0.01;
+            gridHelper.frustumCulled = false;
+            scene.add(gridHelper);
+
+            const boundGeo = new THREE.BufferGeometry();
+            const b = MAP_BOUNDARY;
+            const boundPoints = [
+                new THREE.Vector3(-b, 0.02, -b), new THREE.Vector3(b, 0.02, -b),
+                new THREE.Vector3(b, 0.02, -b), new THREE.Vector3(b, 0.02, b),
+                new THREE.Vector3(b, 0.02, b), new THREE.Vector3(-b, 0.02, b),
+                new THREE.Vector3(-b, 0.02, b), new THREE.Vector3(-b, 0.02, -b)
+            ];
+            boundGeo.setFromPoints(boundPoints);
+            const boundMat = new THREE.LineBasicMaterial({ color: 0xff0044, linewidth: 3 });
+            const boundLines = new THREE.LineSegments(boundGeo, boundMat);
+            scene.add(boundLines);
+
+            createPlayerObject(p1, 0xffffff, 0x000000, 0x000000);
+            createPlayerObject(p2, 0x000000, 0xffffff, 0x000000);
+            p2.mesh.visible = false;
+            if (p2.lineMesh) p2.lineMesh.visible = false;
+
+            createPlayerObject(p3, 0x00ff88, 0x000000, 0x00ff88);
+            p3.mesh.visible = false;
+            if (p3.lineMesh) p3.lineMesh.visible = false;
+        }
+
+        function resizeRenderer() {
+            if (!renderer || !camera) return;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width / pixelScale, height / pixelScale, false);
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+        }
+
+        function spawnP3Wall() {
+            if (p3.wallCooldownTimer > 0) return;
+
+            let dirX = p3.activeDirX;
+            let dirZ = p3.activeDirZ;
+
+            if (dirX === 0 && dirZ === 0) {
+                dirX = p3.lastFacingX;
+                dirZ = p3.lastFacingZ;
+            }
+
+            const len = Math.hypot(dirX, dirZ);
+            if (len > 0) {
+                dirX /= len;
+                dirZ /= len;
+            } else {
+                dirZ = -1;
+            }
+
+            const wallWidth = 4.2;
+            const wallHeight = 1.6;
+            const wallDepth = 0.5;
+
+            const spawnDist = 1.8;
+            const wallX = Math.max(-MAP_BOUNDARY + 1, Math.min(MAP_BOUNDARY - 1, p3.posX + dirX * spawnDist));
+            const wallZ = Math.max(-MAP_BOUNDARY + 1, Math.min(MAP_BOUNDARY - 1, p3.posZ + dirZ * spawnDist));
+
+            const geo = new THREE.BoxGeometry(wallWidth, wallHeight, wallDepth);
+            const mat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.85 });
+            const mesh = new THREE.Mesh(geo, mat);
+
+            const edges = new THREE.EdgesGeometry(geo);
+            const lineMat = new THREE.LineBasicMaterial({ color: 0x003311, linewidth: 3 });
+            mesh.add(new THREE.LineSegments(edges, lineMat));
+
+            mesh.position.set(wallX, wallHeight / 2, wallZ);
+            mesh.rotation.y = Math.atan2(dirX, dirZ);
+
+            scene.add(mesh);
+
+            activeWalls.push({
+                mesh: mesh,
+                posX: wallX,
+                posZ: wallZ,
+                width: wallWidth,
+                depth: wallDepth,
+                rotationY: mesh.rotation.y,
+                life: 5.0,
+                maxLife: 5.0
+            });
+
+            p3.wallCooldownTimer = P3_WALL_COOLDOWN;
+            playSound('clear');
+        }
+
+        function checkWallCollision(px, pz, r, wall) {
+            const dx = px - wall.posX;
+            const dz = pz - wall.posZ;
+            const cos = Math.cos(-wall.rotationY);
+            const sin = Math.sin(-wall.rotationY);
+            const lx = dx * cos - dz * sin;
+            const lz = dx * sin + dz * cos;
+
+            const halfW = wall.width / 2;
+            const halfD = wall.depth / 2;
+
+            const closestX = Math.max(-halfW, Math.min(halfW, lx));
+            const closestZ = Math.max(-halfD, Math.min(halfD, lz));
+
+            const distX = lx - closestX;
+            const distZ = lz - closestZ;
+            return (distX * distX + distZ * distZ) < (r * r);
+        }
+
+        function resolveWallCollision(entity, isPlayer, wall) {
+            const px = isPlayer ? entity.posX : entity.mesh.position.x;
+            const pz = isPlayer ? entity.posZ : entity.mesh.position.z;
+            const radius = isPlayer ? (CUBE_SIZE * 0.5) : ((entity.scale || 0.8) * 0.5);
+
+            const dx = px - wall.posX;
+            const dz = pz - wall.posZ;
+            const rot = wall.rotationY;
+            const cos = Math.cos(-rot);
+            const sin = Math.sin(-rot);
+
+            const lx = dx * cos - dz * sin;
+            const lz = dx * sin + dz * cos;
+
+            const halfW = wall.width / 2;
+            const halfD = wall.depth / 2;
+
+            const closestX = Math.max(-halfW, Math.min(halfW, lx));
+            const closestZ = Math.max(-halfD, Math.min(halfD, lz));
+
+            const distX = lx - closestX;
+            const distZ = lz - closestZ;
+            const distSq = distX * distX + distZ * distZ;
+
+            if (distSq < radius * radius) {
+                let pushLx = 0;
+                let pushLz = 0;
+
+                if (distSq > 0.00001) {
+                    const dist = Math.sqrt(distSq);
+                    const penetration = radius - dist;
+                    pushLx = (distX / dist) * penetration;
+                    pushLz = (distZ / dist) * penetration;
+                } else {
+                    const overlapX = halfW + radius - Math.abs(lx);
+                    const overlapZ = halfD + radius - Math.abs(lz);
+                    if (overlapX < overlapZ) {
+                        pushLx = (lx >= 0 ? 1 : -1) * overlapX;
+                    } else {
+                        pushLz = (lz >= 0 ? 1 : -1) * overlapZ;
+                    }
+                }
+
+                const cosW = Math.cos(rot);
+                const sinW = Math.sin(rot);
+                const pushWx = pushLx * cosW - pushLz * sinW;
+                const pushWz = pushLx * sinW + pushLz * cosW;
+
+                if (isPlayer) {
+                    entity.posX += pushWx;
+                    entity.posZ += pushWz;
+                    entity.slideVelX *= -0.2;
+                    entity.slideVelZ *= -0.2;
+                } else {
+                    entity.mesh.position.x += pushWx;
+                    entity.mesh.position.z += pushWz;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        function animate(currentTime) {
+            requestAnimationFrame(animate);
+
+            const deltaTime = Math.min(0.05, (currentTime - lastTime) / 1000);
+            lastTime = currentTime;
+
+            if (gameState === 'MENU') {
+                if (p1.mesh) {
+                    p1.mesh.rotation.y += deltaTime * 0.1;
+                    p1.mesh.rotation.x += deltaTime * 0.04;
+                }
+                updateCameraPosition(deltaTime);
+            } else {
+                if (p3.wallCooldownTimer > 0) {
+                    p3.wallCooldownTimer = Math.max(0, p3.wallCooldownTimer - deltaTime);
+                }
+
+                for (let i = activeWalls.length - 1; i >= 0; i--) {
+                    const wall = activeWalls[i];
+                    wall.life -= deltaTime;
+
+                    if (wall.mesh) {
+                        if (wall.life < 1.0) {
+                            wall.mesh.material.opacity = (wall.life / 1.0) * 0.85;
+                        }
+                    }
+
+                    if (wall.life <= 0) {
+                        scene.remove(wall.mesh);
+                        wall.mesh.geometry.dispose();
+                        activeWalls.splice(i, 1);
+                    }
+                }
+
+                if (gameState === 'MINIGAME') {
+                    if (currentMinigame === 'COOP') {
+                        let allDefeated = (p1CoopHp <= 0);
+                        if (gameMode === '2P' || gameMode === '3P') allDefeated = allDefeated && (p2CoopHp <= 0);
+                        if (gameMode === '3P') allDefeated = allDefeated && (p3CoopHp <= 0);
+
+                        if (allDefeated) {
+                            endMinigame('¡SOBRELOTEADOS!');
+                            return;
+                        }
+
+                        if (p1CoopHp <= 0 && p1.mesh.visible) p1.mesh.visible = false;
+                        if (p2CoopHp <= 0 && p2.mesh.visible) {
+                            p2.mesh.visible = false;
+                            if (p2.lineMesh) p2.lineMesh.visible = false;
+                        }
+                        if (p3CoopHp <= 0 && p3.mesh.visible) {
+                            p3.mesh.visible = false;
+                            if (p3.lineMesh) p3.lineMesh.visible = false;
+                        }
+
+                        for (let i = coopEnemies.length - 1; i >= 0; i--) {
+                            const enemy = coopEnemies[i];
+
+                            let target = null;
+                            let minDist = 999;
+                            if (p1CoopHp > 0) {
+                                const d1 = Math.hypot(p1.posX - enemy.mesh.position.x, p1.posZ - enemy.mesh.position.z);
+                                if (d1 < minDist) { minDist = d1; target = p1; }
+                            }
+                            if ((gameMode === '2P' || gameMode === '3P') && p2CoopHp > 0) {
+                                const d2 = Math.hypot(p2.posX - enemy.mesh.position.x, p2.posZ - enemy.mesh.position.z);
+                                if (d2 < minDist) { minDist = d2; target = p2; }
+                            }
+                            if (gameMode === '3P' && p3CoopHp > 0) {
+                                const d3 = Math.hypot(p3.posX - enemy.mesh.position.x, p3.posZ - enemy.mesh.position.z);
+                                if (d3 < minDist) { minDist = d3; target = p3; }
+                            }
+
+                            if (target) {
+                                const dx = target.posX - enemy.mesh.position.x;
+                                const dz = target.posZ - enemy.mesh.position.z;
+                                const dist = Math.hypot(dx, dz);
+                                const nx = dist > 0 ? dx / dist : 0;
+                                const nz = dist > 0 ? dz / dist : -1;
+
+                                if (enemy.type === 'CHASER') {
+                                    enemy.mesh.position.x += nx * enemy.speed * deltaTime;
+                                    enemy.mesh.position.z += nz * enemy.speed * deltaTime;
+                                    enemy.mesh.rotation.y += deltaTime * 3.0;
+                                } else if (enemy.type === 'SHOOTER') {
+                                    if (dist > 8.0) {
+                                        enemy.mesh.position.x += nx * enemy.speed * deltaTime;
+                                        enemy.mesh.position.z += nz * enemy.speed * deltaTime;
+                                    } else if (dist < 5.0) {
+                                        enemy.mesh.position.x -= nx * enemy.speed * deltaTime;
+                                        enemy.mesh.position.z -= nz * enemy.speed * deltaTime;
+                                    }
+                                    enemy.mesh.lookAt(target.posX, enemy.mesh.position.y, target.posZ);
+
+                                    enemy.shootTimer += deltaTime;
+                                    if (enemy.shootTimer >= 2.2) {
+                                        enemy.shootTimer = 0;
+                                        spawnEnemyProjectile(enemy.mesh.position.x, enemy.mesh.position.z, nx, nz);
+                                        playSound('shoot');
+                                    }
+                                } else if (enemy.type === 'CHARGER') {
+                                    if (enemy.chargeState === 'IDLE') {
+                                        enemy.mesh.position.x += nx * enemy.speed * deltaTime;
+                                        enemy.mesh.position.z += nz * enemy.speed * deltaTime;
+                                        if (dist < 10.0) {
+                                            enemy.chargeState = 'CHARGING';
+                                            enemy.vx = nx * 16.0;
+                                            enemy.vz = nz * 16.0;
+                                        }
+                                    } else {
+                                        enemy.mesh.position.x += enemy.vx * deltaTime;
+                                        enemy.mesh.position.z += enemy.vz * deltaTime;
+                                        if (Math.abs(enemy.mesh.position.x) > MAP_BOUNDARY || Math.abs(enemy.mesh.position.z) > MAP_BOUNDARY) {
+                                            enemy.chargeState = 'IDLE';
+                                        }
+                                    }
+                                    enemy.mesh.rotation.x += deltaTime * 4;
+                                }
+
+                                if (dist < (CUBE_SIZE / 2 + enemy.scale / 2)) {
+                                    if (target === p1 && p1CoopHp > 0) { p1CoopHp -= 1; p1.hitFlash = 1.0; p1.slideVelX += nx * 14; p1.slideVelZ += nz * 14; }
+                                    else if (target === p2 && p2CoopHp > 0) { p2CoopHp -= 1; p2.hitFlash = 1.0; p2.slideVelX += nx * 14; p2.slideVelZ += nz * 14; }
+                                    else if (target === p3 && p3CoopHp > 0) { p3CoopHp -= 1; p3.hitFlash = 1.0; p3.slideVelX += nx * 14; p3.slideVelZ += nz * 14; }
+                                    playSound('clear');
+
+                                    scene.remove(enemy.mesh);
+                                    enemy.mesh.geometry.dispose();
+                                    coopEnemies.splice(i, 1);
+                                    continue;
+                                }
+                            }
+                        }
+
+                        for (let i = coopEnemyProjectiles.length - 1; i >= 0; i--) {
+                            const ep = coopEnemyProjectiles[i];
+                            ep.life -= deltaTime;
+                            ep.mesh.position.x += ep.dirX * ep.speed * deltaTime;
+                            ep.mesh.position.z += ep.dirZ * ep.speed * deltaTime;
+
+                            let hitWall = false;
+                            for (let w = 0; w < activeWalls.length; w++) {
+                                if (checkWallCollision(ep.mesh.position.x, ep.mesh.position.z, 0.3, activeWalls[w])) {
+                                    hitWall = true;
+                                    break;
+                                }
+                            }
+                            if (hitWall) {
+                                playSound('clear');
+                                scene.remove(ep.mesh);
+                                ep.mesh.geometry.dispose();
+                                coopEnemyProjectiles.splice(i, 1);
+                                continue;
+                            }
+
+                            const checkHit = (p, hpRef) => {
+                                if (hpRef > 0 && Math.hypot(ep.mesh.position.x - p.posX, ep.mesh.position.z - p.posZ) < 0.7) {
+                                    p.hitFlash = 1.0;
+                                    p.slideVelX += ep.dirX * 12;
+                                    p.slideVelZ += ep.dirZ * 12;
+                                    playSound('clear');
+                                    scene.remove(ep.mesh);
+                                    ep.mesh.geometry.dispose();
+                                    coopEnemyProjectiles.splice(i, 1);
+                                    return true;
+                                }
+                                return false;
+                            };
+
+                            if (checkHit(p1, p1CoopHp)) { p1CoopHp--; continue; }
+                            if ((gameMode === '2P' || gameMode === '3P') && checkHit(p2, p2CoopHp)) { p2CoopHp--; continue; }
+                            if (gameMode === '3P' && checkHit(p3, p3CoopHp)) { p3CoopHp--; continue; }
+
+                            if (ep.life <= 0 || Math.abs(ep.mesh.position.x) > MAP_BOUNDARY) {
+                                scene.remove(ep.mesh);
+                                ep.mesh.geometry.dispose();
+                                coopEnemyProjectiles.splice(i, 1);
+                            }
+                        }
+
+                        for (let i = projectiles.length - 1; i >= 0; i--) {
+                            const proj = projectiles[i];
+                            for (let j = coopEnemies.length - 1; j >= 0; j--) {
+                                const enemy = coopEnemies[j];
+                                const dist = Math.hypot(proj.mesh.position.x - enemy.mesh.position.x, proj.mesh.position.z - enemy.mesh.position.z);
+
+                                if (dist < (enemy.scale + 0.3)) {
+                                    enemy.hp -= 1;
+                                    enemy.mesh.position.x += proj.dirX * 1.5;
+                                    enemy.mesh.position.z += proj.dirZ * 1.5;
+
+                                    scene.remove(proj.mesh);
+                                    proj.mesh.geometry.dispose();
+                                    projectiles.splice(i, 1);
+
+                                    if (enemy.hp <= 0) {
+                                        coopScore += enemy.maxHp * 50;
+                                        scene.remove(enemy.mesh);
+                                        enemy.mesh.geometry.dispose();
+                                        coopEnemies.splice(j, 1);
+                                        playSound('shoot');
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (coopEnemies.length === 0) {
+                            waveTransitionTimer += deltaTime;
+                            if (waveTransitionTimer > 1.5) {
+                                waveTransitionTimer = 0;
+                                coopWave += 1;
+                                coopScore += 200;
+                                if (p1CoopHp > 0 && p1CoopHp < 3) p1CoopHp += 1;
+                                if (p2CoopHp > 0 && p2CoopHp < 3) p2CoopHp += 1;
+                                if (p3CoopHp > 0 && p3CoopHp < 3) p3CoopHp += 1;
+                                spawnCoopWave(coopWave);
+                            }
+                        }
+                    } else minigameSpawnTimer += deltaTime;
+
+                    if (currentMinigame === 'PVP_INFINITE' || currentMinigame === 'PVP_3LIVES') {
+                        for (let i = projectiles.length - 1; i >= 0; i--) {
+                            const proj = projectiles[i];
+                            const players = [p1, p2, p3].filter(p => p.id !== proj.ownerId && p.mesh && p.mesh.visible);
+
+                            for (let targetPlayer of players) {
+                                const dist = Math.hypot(proj.mesh.position.x - targetPlayer.posX, proj.mesh.position.z - targetPlayer.posZ);
+
+                                if (dist < 0.9) {
+                                    playSound('clear');
+                                    targetPlayer.hitFlash = 1.0;
+
+                                    const KNOCKBACK_FORCE = 18.0;
+                                    targetPlayer.slideVelX += proj.dirX * KNOCKBACK_FORCE;
+                                    targetPlayer.slideVelZ += proj.dirZ * KNOCKBACK_FORCE;
+
+                                    scene.remove(proj.mesh);
+                                    proj.mesh.geometry.dispose();
+                                    projectiles.splice(i, 1);
+
+                                    if (currentMinigame === 'PVP_INFINITE') {
+                                        if (proj.ownerId === 1) p1Score++;
+                                        else if (proj.ownerId === 2) p2Score++;
+                                        else if (proj.ownerId === 3) p3Score++;
+                                    } else if (currentMinigame === 'PVP_3LIVES') {
+                                        if (targetPlayer.id === 1) p1Lives--;
+                                        else if (targetPlayer.id === 2) p2Lives--;
+                                        else if (targetPlayer.id === 3) p3Lives--;
+
+                                        let activeCount = (p1Lives > 0 ? 1 : 0) + (p2Lives > 0 ? 1 : 0) + (gameMode === '3P' && p3Lives > 0 ? 1 : 0);
+                                        if (activeCount <= 1) {
+                                            endMinigame('¡FIN DEL COMBATE!');
+                                            return;
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    } else if (currentMinigame === 'TARGET') {
+                        minigameTimer -= deltaTime;
+                        if (minigameTimer <= 0) { endMinigame('¡TIEMPO AGOTADO!'); return; }
+
+                        for (let ent of minigameEntities) {
+                            ent.mesh.rotation.y += deltaTime * ent.rotSpeed;
+                            ent.mesh.position.y = 1.2 + Math.sin(currentTime * 0.003 + ent.floatOffset) * 0.4;
+                        }
+
+                        for (let i = projectiles.length - 1; i >= 0; i--) {
+                            const proj = projectiles[i];
+                            for (let j = minigameEntities.length - 1; j >= 0; j--) {
+                                const ent = minigameEntities[j];
+                                const dist = Math.hypot(proj.mesh.position.x - ent.mesh.position.x, proj.mesh.position.z - ent.mesh.position.z);
+                                if (dist < 1.1) {
+                                    scene.remove(ent.mesh);
+                                    ent.mesh.geometry.dispose();
+                                    minigameEntities.splice(j, 1);
+
+                                    scene.remove(proj.mesh);
+                                    proj.mesh.geometry.dispose();
+                                    projectiles.splice(i, 1);
+
+                                    minigameScore += 100;
+                                    playSound('shoot');
+                                    spawnMinigameTarget();
+                                    break;
+                                }
+                            }
+                        }
+                    } else if (currentMinigame === 'DODGE') {
+                        minigameTimer += deltaTime;
+                        if (minigameSpawnTimer > Math.max(0.3, 1.2 - minigameTimer * 0.02)) {
+                            minigameSpawnTimer = 0;
+                            spawnMinigameHazard();
+                        }
+
+                        for (let i = minigameEntities.length - 1; i >= 0; i--) {
+                            const ent = minigameEntities[i];
+                            ent.mesh.position.x += ent.vx * deltaTime;
+                            ent.mesh.position.z += ent.vz * deltaTime;
+                            ent.mesh.rotation.x += deltaTime * 4;
+
+                            const dist = Math.hypot(p1.posX - ent.mesh.position.x, p1.posZ - ent.mesh.position.z);
+                            if (dist < (CUBE_SIZE / 2 + ent.size / 2)) {
+                                playSound('clear');
+                                endMinigame('¡COLISIÓN!');
+                                return;
+                            }
+
+                            if (Math.abs(ent.mesh.position.x) > MAP_BOUNDARY + 5 || Math.abs(ent.mesh.position.z) > MAP_BOUNDARY + 5) {
+                                scene.remove(ent.mesh);
+                                ent.mesh.geometry.dispose();
+                                minigameEntities.splice(i, 1);
+                                minigameScore += 10;
+                            }
+                        }
+                    } else if (currentMinigame === 'COLLECT') {
+                        minigameTimer -= deltaTime;
+                        if (minigameTimer <= 0) { endMinigame('¡TIEMPO AGOTADO!'); return; }
+
+                        for (let i = minigameEntities.length - 1; i >= 0; i--) {
+                            const ent = minigameEntities[i];
+                            ent.mesh.rotation.y += deltaTime * 3;
+
+                            const dist = Math.hypot(p1.posX - ent.mesh.position.x, p1.posZ - ent.mesh.position.z);
+                            if (dist < 1.0) {
+                                scene.remove(ent.mesh);
+                                ent.mesh.geometry.dispose();
+                                minigameEntities.splice(i, 1);
+
+                                minigameScore += 10;
+                                minigameTimer += 1.5;
+                                playSound('clear');
+                                spawnMinigameGem();
+                            }
+                        }
+                    }
+
+                    updateMinigameHUD();
+                }
+
+                if (cameraZoomFactor < 0.999) {
+                    cameraZoomFactor = THREE.MathUtils.lerp(cameraZoomFactor, 1.0, deltaTime * 4.5);
+                } else {
+                    cameraZoomFactor = 1.0;
+                }
+
+                for (let i = projectiles.length - 1; i >= 0; i--) {
+                    const p = projectiles[i];
+                    p.life -= deltaTime;
+                    p.mesh.position.x += p.dirX * p.speed * deltaTime;
+                    p.mesh.position.z += p.dirZ * p.speed * deltaTime;
+                    p.mesh.rotation.x += deltaTime * 10;
+                    p.mesh.rotation.y += deltaTime * 10;
+
+                    let hitWall = false;
+                    for (let w = 0; w < activeWalls.length; w++) {
+                        if (checkWallCollision(p.mesh.position.x, p.mesh.position.z, 0.3, activeWalls[w])) {
+                            hitWall = true;
+                            break;
+                        }
+                    }
+
+                    if (hitWall || p.life <= 0 || Math.abs(p.mesh.position.x) > MAP_BOUNDARY + 10 || Math.abs(p.mesh.position.z) > MAP_BOUNDARY + 10) {
+                        playSound('clear');
+                        scene.remove(p.mesh);
+                        p.mesh.geometry.dispose();
+                        projectiles.splice(i, 1);
+                    }
+                }
+
+                const handleWallCollision = (entity, isPlayer = true) => {
+                    if (!entity || (!isPlayer && (!entity.mesh || !entity.mesh.visible))) return;
+                    for (let w = 0; w < activeWalls.length; w++) {
+                        resolveWallCollision(entity, isPlayer, activeWalls[w]);
+                    }
+                };
+
+                handleWallCollision(p1, true);
+                if (gameMode === '2P' || gameMode === '3P') handleWallCollision(p2, true);
+                if (gameMode === '3P') handleWallCollision(p3, true);
+                for (let enemy of coopEnemies) handleWallCollision(enemy, false);
+
+                const isMulti = (gameMode === '2P' || gameMode === '3P' || currentMinigame === 'PVP_INFINITE' || currentMinigame === 'PVP_3LIVES');
+
+                let p1InputX = 0, p1InputZ = 0;
+                if (keysPressed['KeyW'] || keysPressed['w'] || keysPressed['W']) p1InputZ -= 1;
+                if (keysPressed['KeyS'] || keysPressed['s'] || keysPressed['S']) p1InputZ += 1;
+                if (keysPressed['KeyA'] || keysPressed['a'] || keysPressed['A']) p1InputX -= 1;
+                if (keysPressed['KeyD'] || keysPressed['d'] || keysPressed['D']) p1InputX += 1;
+
+                if (!isMulti) {
+                    if (keysPressed['ArrowUp']) p1InputZ -= 1;
+                    if (keysPressed['ArrowDown']) p1InputZ += 1;
+                    if (keysPressed['ArrowLeft']) p1InputX -= 1;
+                    if (keysPressed['ArrowRight']) p1InputX += 1;
+                }
+
+                if (currentMinigame !== 'COOP' || p1CoopHp > 0) {
+                    updatePlayerMovement(p1, p1InputX, p1InputZ, deltaTime);
+                }
+
+                if (isMulti) {
+                    let p2InputX = 0, p2InputZ = 0;
+                    if (keysPressed['ArrowUp']) p2InputZ -= 1;
+                    if (keysPressed['ArrowDown']) p2InputZ += 1;
+                    if (keysPressed['ArrowLeft']) p2InputX -= 1;
+                    if (keysPressed['ArrowRight']) p2InputX += 1;
+
+                    if (currentMinigame !== 'COOP' || p2CoopHp > 0) {
+                        updatePlayerMovement(p2, p2InputX, p2InputZ, deltaTime);
+                    }
+                }
+
+                if (gameMode === '3P') {
+                    let p3InputX = 0, p3InputZ = 0;
+                    if (keysPressed['5'] || keysPressed['Digit5'] || keysPressed['Numpad5']) p3InputZ -= 1;
+                    if (keysPressed['2'] || keysPressed['Digit2'] || keysPressed['Numpad2']) p3InputZ += 1;
+                    if (keysPressed['1'] || keysPressed['Digit1'] || keysPressed['Numpad1']) p3InputX -= 1;
+                    if (keysPressed['3'] || keysPressed['Digit3'] || keysPressed['Numpad3']) p3InputX += 1;
+
+                    if (currentMinigame !== 'COOP' || p3CoopHp > 0) {
+                        updatePlayerMovement(p3, p3InputX, p3InputZ, deltaTime);
+                    }
+                }
+
+                const handlePlayerCollision = (plA, plB) => {
+                    if (!plA.mesh.visible || !plB.mesh.visible) return;
+                    const dx = plB.posX - plA.posX;
+                    const dz = plB.posZ - plA.posZ;
+                    const dist = Math.hypot(dx, dz);
+                    const minDist = CUBE_SIZE * 0.95;
+
+                    if (dist < minDist && dist > 0.0001) {
+                        const nx = dx / dist;
+                        const nz = dz / dist;
+                        const overlap = 0.5 * (minDist - dist);
+
+                        plA.posX -= nx * overlap;
+                        plA.posZ -= nz * overlap;
+                        plB.posX += nx * overlap;
+                        plB.posZ += nz * overlap;
+
+                        const BOUNCE_IMPULSE = 15.0;
+                        plA.slideVelX -= nx * BOUNCE_IMPULSE;
+                        plA.slideVelZ -= nz * BOUNCE_IMPULSE;
+                        plB.slideVelX += nx * BOUNCE_IMPULSE;
+                        plB.slideVelZ += nz * BOUNCE_IMPULSE;
+
+                        plA.hitFlash = 0.5;
+                        plB.hitFlash = 0.5;
+                        playSound('clear');
+                    }
+                };
+
+                if (isMulti) handlePlayerCollision(p1, p2);
+                if (gameMode === '3P') {
+                    handlePlayerCollision(p1, p3);
+                    handlePlayerCollision(p2, p3);
+                }
+
+                updateCameraPosition(deltaTime);
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            keysPressed[e.key] = true;
+            keysPressed[e.code] = true;
+
+            if (e.key === 'Escape') {
+                if (gameState !== 'MENU') openMenu();
+            }
+
+            if (gameState === 'PLAYING' || gameState === 'MINIGAME') {
+                if ((e.key === 'e' || e.key === 'E' || e.code === 'KeyE') && (currentMinigame !== 'COOP' || p1CoopHp > 0)) {
+                    shootProjectile(p1, 0xffffff, 0x000000);
+                }
+                if ((e.key === ' ' || e.code === 'Space') && (currentMinigame !== 'COOP' || p1CoopHp > 0)) {
+                    clearTrail(p1);
+                }
+
+                if (gameMode === '2P' || gameMode === '3P' || currentMinigame === 'PVP_INFINITE' || currentMinigame === 'PVP_3LIVES') {
+                    if ((e.key === 'l' || e.key === 'L' || e.code === 'KeyL') && (currentMinigame !== 'COOP' || p2CoopHp > 0)) {
+                        shootProjectile(p2, 0x000000, 0xffffff);
+                    }
+                    if ((e.key === 'k' || e.key === 'K' || e.code === 'KeyK' || e.key === 'Shift' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && (currentMinigame !== 'COOP' || p2CoopHp > 0)) {
+                        clearTrail(p2);
+                    }
+                }
+
+                if (gameMode === '3P') {
+                    if ((e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') && (currentMinigame !== 'COOP' || p3CoopHp > 0)) {
+                        spawnP3Wall();
+                    }
+                    if ((e.key === '.' || e.code === 'NumpadDecimal' || e.code === 'Period' || e.code === 'Delete') && (currentMinigame !== 'COOP' || p3CoopHp > 0)) {
+                        clearTrail(p3);
+                    }
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keysPressed[e.key] = false;
+            keysPressed[e.code] = false;
+        });
+
+        window.addEventListener('resize', () => {
+            resizeRenderer();
+            updateCameraPosition(0);
+        });
+
+        window.onload = function() {
+            initScene();
+            lastTime = performance.now();
+            requestAnimationFrame(animate);
+        };
+    </script>
+</body>
+</html>
